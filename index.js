@@ -19,11 +19,29 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
 async function run() {
   try {
     await client.connect();
 
+    const greenNestDB = client.db('greenNest');
+    const plantsColl = greenNestDB.collection('plants');
+
     // All Apis Endpoint
+    app.get('/plants', async (req, res) => {
+      const category = req.query.category;
+
+      if (category) {
+        const query = { category: category };
+        const cursor = plantsColl.find(query);
+        const result = await cursor.toArray();
+        return res.send(result);
+      }
+
+      const cursor = plantsColl.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
     await client.db('admin').command({ ping: 1 });
     console.log(
