@@ -22,31 +22,34 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const greenNestDB = client.db('greenNest');
     const plantsColl = greenNestDB.collection('plants');
 
     // All Apis Endpoint
     app.get('/plants', async (req, res) => {
-      const category = req.query.category;
+      const { category = '', sort = '', order = '' } = req.query;
+
+      const sortOption = {};
+      const query = {};
 
       if (category) {
-        const query = { category: category };
-        const cursor = plantsColl.find(query);
-        const result = await cursor.toArray();
-        return res.send(result);
+        query['category'] = category;
+      }
+      if (sort && order) {
+        sortOption[sort] = order === 'asc' ? 1 : -1;
       }
 
-      const cursor = plantsColl.find();
+      const cursor = plantsColl.find(query).sort(sortOption);
       const result = await cursor.toArray();
-      res.send(result);
+      return res.send(result);
     });
 
-    await client.db('admin').command({ ping: 1 });
-    console.log(
-      'Pinged your deployment. You successfully connected to MongoDB!'
-    );
+    // await client.db('admin').command({ ping: 1 });
+    // console.log(
+    //   'Pinged your deployment. You successfully connected to MongoDB!'
+    // );
   } finally {
     // await client.close();
   }
